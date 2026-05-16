@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Resume Builder Generator</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        @import url('https://fonts.googleapis.com/css2?family=Merriweather:wght@400;700&family=Lato:wght@300;400;700&display=swap');
+
+        :root {
+            --primary: #1a202c;
+            --secondary: #2d3748;
+            --accent: #5a67d8;
+            --accent-light: #667eea;
+            --success: #48bb78;
+            --danger: #f56565;
+            --border: #e2e8f0;
+            --text-primary: #1a202c;
+            --text-secondary: #718096;
+            --bg-light: #f7fafc;
+            --bg-white: #ffffff;
+            --bg-body: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --card-bg: #ffffff;
+            --input-bg: #ffffff;
+            --header-bg: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+        }
+
+        body.dark-mode {
+            --primary: #e2e8f0;
+            --secondary: #cbd5e0;
+            --accent: #667eea;
+            --accent-light: #7c8ff5;
+            --success: #48bb78;
+            --danger: #f56565;
+            --border: #2d3748;
+            --text-primary: #e2e8f0;
+            --text-secondary: #a0aec0;
+            --bg-light: #1a202c;
+            --bg-white: #2d3748;
+            --bg-body: linear-gradient(135deg, #1a202c 0%, #2d3748 100%);
+            --card-bg: #2d3748;
+            --input-bg: #374151;
+            --header-bg: linear-gradient(135deg, #0f1419 0%, #1a202c 100%);
+        }
+
+        body {
+            font-family: 'Lato', sans-serif;
+            background: var(--bg-body);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: 12px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            overflow: hidden;
+            transition: background 0.3s ease;
+        }
+
+        .header {
+            background: var(--header-bg);
+            color: white;
+            padding: 40px;
+            text-align: center;
+            transition: background 0.3s ease;
+        }
+
+        .header h1 {
+            font-family: 'Merriweather', serif;
+            font-size: 2.5rem;
+            margin-bottom: 10px;
+            font-weight: 700;
+            letter-spacing: -1px;
+        }
+
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            font-weight: 300;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0;
+            min-height: 600px;
+        }
+
+        .editor-panel {
+            padding: 40px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+            background: var(--bg-light);
+            transition: background 0.3s ease;
+        }
+
+        .preview-panel {
+            padding: 40px;
+            overflow-y: auto;
+            max-height: calc(100vh - 200px);
+            background: var(--card-bg);
+            border-left: 1px solid var(--border);
+            transition: background 0.3s ease;
+        }
+
+        .section {
+            margin-bottom: 35px;
+        }
+
+        .section-title {
+            font-family: 'Merriweather', serif;
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--primary);
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid var(--accent);
+            display: inline-block;
+        }
+
+        .template-selector {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            margin-bottom: 25px;
+        }
+
+        .template-btn {
+            padding: 12px;
+            border: 2px solid var(--border);
+            background: var(--card-bg);
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .template-btn:hover {
+            border-color: var(--accent);
+            color: var(--accent);
+            background: rgba(90, 103, 216, 0.05);
+        }
+
+        .template-btn.active {
+            background: var(--accent);
+            color: white;
+            border-color: var(--accent);
+            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
+        }
+
+        .form-group {
+            margin-bottom: 18px;
+        }
+
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 6px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-family: 'Lato', sans-serif;
+            font-size: 0.95rem;
+            transition: border-color 0.3s ease, box-shadow 0.3s ease, background 0.3s ease, color 0.3s ease;
+            background: var(--input-bg);
+            color: var(--text-primary);
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(90, 103, 216, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 80px;
+        }
+
+        .button-group {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            padding: 10px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-family: 'Lato', sans-serif;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4c51bf;
+            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--bg-white);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-light);
+            border-color: var(--accent);
+            color: var(--accent);
+        }
+
+        .btn-danger {
+            background: #fee;
+            color: var(--danger);
+            border: 1px solid #fcc;
+        }
+
+        .btn-danger:hover {
+            background: #fdd;
+            border-color: var(--danger);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        }
+
+        .entry-item {
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 12px;
+            border: 1px solid var(--border);
+            position: relative;
+            transition: background 0.3s ease;
+        }
+
+        .entry-item.empty {
+            opacity: 0.6;
+            text-align: center;
+            padding: 30px 15px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Resume Preview Styles */
+        .resume-preview {
+            font-family: 'Merriweather', 'Georgia', serif;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+
+        .preview-header {
+            text-align: center;
+            margin-bottom: 25px;
+            border-bottom: 2px solid var(--accent);
+            padding-bottom: 15px;
+        }
+
+        .preview-name {
+            font-size: 1.8rem;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+
+        .preview-contact {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+
+        .preview-section {
+            margin-bottom: 20px;
+        }
+
+        .preview-section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--accent);
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 5px;
+        }
+
+        .preview-entry {
+            margin-bottom: 12px;
+        }
+
+        .preview-entry-title {
+            font-weight: 700;
+            font-size: 0.95rem;
+        }
+
+        .preview-entry-subtitle {
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .preview-entry-date {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .preview-entry-description {
+            font-size: 0.9rem;
+            margin-top: 4px;
+            color: var(--text-primary);
+        }
+
+        .skills-list {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .skill-badge {
+            background: rgba(90, 103, 216, 0.1);
+            color: var(--accent);
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .download-section {
+            padding: 20px 40px;
+            background: var(--bg-light);
+            border-top: 1px solid var(--border);
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            transition: background 0.3s ease;
+        }
+
+        /* Template variations */
+        .template-modern .preview-header {
+            text-align: left;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+        }
+
+        .template-modern .preview-name {
+            text-align: left;
+        }
+
+        .template-modern .preview-contact {
+            justify-content: flex-start;
+            flex-direction: column;
+            font-size: 0.8rem;
+        }
+
+        .template-minimalist .preview-section-title {
+            text-transform: none;
+            letter-spacing: 0;
+            font-size: 1rem;
+            color: var(--primary);
+            border-bottom: 1px solid var(--text-primary);
+        }
+
+        .template-minimalist .preview-header {
+            border-bottom: 1px solid var(--text-primary);
+        }
+
+        .template-creative .preview-header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            margin: -40px -40px 25px -40px;
+            border-radius: 0;
+        }
+
+        .template-creative .preview-name {
+            color: white;
+        }
+
+        .template-creative .preview-contact {
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .template-creative .preview-section-title {
+            color: #667eea;
+            border-bottom: 2px solid #667eea;
+        }
+
+        @media (max-width: 1024px) {
+            .main-content {
+                grid-template-columns: 1fr;
+            }
+
+            .preview-panel {
+                border-left: none;
+                border-top: 1px solid var(--border);
+            }
+
+            .header h1 {
+                font-size: 1.8rem;
+            }
+
+            .template-selector {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .editor-panel,
+            .preview-panel {
+                padding: 20px;
+            }
+
+            .header {
+                padding: 25px;
+            }
+
+            .header h1 {
+                font-size: 1.4rem;
+            }
+
+            .template-selector {
+                grid-template-columns: 1fr;
+            }
+
+            .download-section {
+                flex-direction: column;
+            }
+
+            .btn {
+                width: 100%;
+            }
+        }
+
+        .add-btn-container {
+            margin-top: 12px;
+        }
+
+        .no-entries {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .theme-toggle {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: var(--accent);
+            border: none;
+            color: white;
+            padding: 12px 16px;
+            border-radius: 50px;
+            cursor: pointer;
+            font-size: 1.2rem;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(90, 103, 216, 0.3);
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 600;
+        }
+
+        .theme-toggle:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(90, 103, 216, 0.4);
+        }
+
+        .theme-toggle span {
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">
+        <span id="themeIcon">🌙</span>
+        <span id="themeText">Dark</span>
+    </button>
+    <div class="container">
+        <div class="header">
+            <h1>Resume Builder Generator</h1>
+            <p>Create a professional resume in minutes without login required</p>
+        </div>
+
+        <div class="main-content">
+            <!-- Editor Panel -->
+            <div class="editor-panel">
+                <!-- Template Selection -->
+                <div class="section">
+                    <div class="section-title">Select Template</div>
+                    <div class="template-selector">
+                        <button class="template-btn active" onclick="switchTemplate('classic')">Classic</button>
+                        <button class="template-btn" onclick="switchTemplate('modern')">Modern</button>
+                        <button class="template-btn" onclick="switchTemplate('minimalist')">Minimalist</button>
+                        <button class="template-btn" onclick="switchTemplate('creative')">Creative</button>
+                        <button class="template-btn" onclick="switchTemplate('professional')">Professional</button>
+                        <button class="template-btn" onclick="switchTemplate('academic')">Academic</button>
+                    </div>
+                </div>
+
+                <!-- Personal Information -->
+                <div class="section">
+                    <div class="section-title">Personal Information</div>
+                    <div class="form-group">
+                        <label>Full Name *</label>
+                        <input type="text" id="fullName" placeholder="John Doe" onchange="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Email Address *</label>
+                        <input type="email" id="email" placeholder="john@example.com" onchange="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Phone Number</label>
+                        <input type="tel" id="phone" placeholder="+1 (555) 123-4567" onchange="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Location</label>
+                        <input type="text" id="location" placeholder="New York, NY" onchange="updatePreview()">
+                    </div>
+                    <div class="form-group">
+                        <label>Professional Summary</label>
+                        <textarea id="summary" placeholder="Brief summary of your professional background and goals..." onchange="updatePreview()"></textarea>
+                    </div>
+                </div>
+
+                <!-- Education -->
+                <div class="section">
+                    <div class="section-title">Education</div>
+                    <div id="educationContainer"></div>
+                    <div class="add-btn-container">
+                        <button class="btn btn-secondary" onclick="addEducation()">+ Add Education</button>
+                    </div>
+                </div>
+
+                <!-- Work Experience -->
+                <div class="section">
+                    <div class="section-title">Work Experience</div>
+                    <div id="experienceContainer"></div>
+                    <div class="add-btn-container">
+                        <button class="btn btn-secondary" onclick="addExperience()">+ Add Experience</button>
+                    </div>
+                </div>
+
+                <!-- Skills -->
+                <div class="section">
+                    <div class="section-title">Skills</div>
+                    <div class="form-group">
+                        <label>Skills (comma-separated)</label>
+                        <textarea id="skills" placeholder="JavaScript, React, Project Management, Leadership..." onchange="updatePreview()"></textarea>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Preview Panel -->
+            <div class="preview-panel">
+                <div id="resumePreview" class="resume-preview">
+                    <div class="preview-header">
+                        <div>
+                            <div class="preview-name" id="previewName">Your Name</div>
+                            <div class="preview-contact" id="previewContact">
+                                <span id="previewEmail">email@example.com</span>
+                                <span id="previewPhone"></span>
+                                <span id="previewLocation"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="summarySection" class="preview-section" style="display: none;">
+                        <div class="preview-section-title">Professional Summary</div>
+                        <div id="previewSummary"></div>
+                    </div>
+
+                    <div id="experienceSection" class="preview-section" style="display: none;">
+                        <div class="preview-section-title">Work Experience</div>
+                        <div id="previewExperience"></div>
+                    </div>
+
+                    <div id="educationSection" class="preview-section" style="display: none;">
+                        <div class="preview-section-title">Education</div>
+                        <div id="previewEducation"></div>
+                    </div>
+
+                    <div id="skillsSection" class="preview-section" style="display: none;">
+                        <div class="preview-section-title">Skills</div>
+                        <div class="skills-list" id="previewSkills"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Download Section -->
+        <div class="download-section">
+            <button class="btn btn-success" onclick="downloadPDF()">📥 Download as PDF</button>
+            <button class="btn btn-primary" onclick="resetForm()">🔄 Reset Form</button>
+        </div>
+    </div>
+
+    <script>
+        const data = {
+            personal: {
+                fullName: '',
+                email: '',
+                phone: '',
+                location: '',
+                summary: ''
+            },
+            education: [],
+            experience: [],
+            skills: []
+        };
+
+        let currentTemplate = 'classic';
+
+        // Initialize
+        function init() {
+            loadTheme();
+            loadFromStorage();
+            updatePreview();
+        }
+
+        // Storage Management
+        function saveToStorage() {
+            localStorage.setItem('resumeData', JSON.stringify(data));
+        }
+
+        function loadFromStorage() {
+            const stored = localStorage.getItem('resumeData');
+            if (stored) {
+                Object.assign(data, JSON.parse(stored));
+                populateForm();
+            }
+        }
+
+        // Theme Management
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('resumeTheme') || 'light';
+            document.body.classList.toggle('dark-mode', savedTheme === 'dark');
+            updateThemeButton();
+        }
+
+        function toggleTheme() {
+            document.body.classList.toggle('dark-mode');
+            const isDark = document.body.classList.contains('dark-mode');
+            localStorage.setItem('resumeTheme', isDark ? 'dark' : 'light');
+            updateThemeButton();
+        }
+
+        function updateThemeButton() {
+            const isDark = document.body.classList.contains('dark-mode');
+            const icon = document.getElementById('themeIcon');
+            const text = document.getElementById('themeText');
+            
+            if (isDark) {
+                icon.textContent = '☀️';
+                text.textContent = 'Light';
+            } else {
+                icon.textContent = '🌙';
+                text.textContent = 'Dark';
+            }
+        }
+
+        // Template Switching
+        function switchTemplate(template) {
+            currentTemplate = template;
+            document.querySelectorAll('.template-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            const preview = document.getElementById('resumePreview');
+            preview.className = 'resume-preview template-' + template;
+            updatePreview();
+        }
+
+        // Personal Information Updates
+        function updatePersonalInfo() {
+            data.personal.fullName = document.getElementById('fullName').value;
+            data.personal.email = document.getElementById('email').value;
+            data.personal.phone = document.getElementById('phone').value;
+            data.personal.location = document.getElementById('location').value;
+            data.personal.summary = document.getElementById('summary').value;
+            saveToStorage();
+        }
+
+        // Education Management
+        function addEducation() {
+            const id = Date.now();
+            data.education.push({
+                id,
+                school: '',
+                degree: '',
+                field: '',
+                startDate: '',
+                endDate: ''
+            });
+            renderEducation();
+            updatePreview();
+        }
+
+        function removeEducation(id) {
+            data.education = data.education.filter(e => e.id !== id);
+            renderEducation();
+            updatePreview();
+        }
+
+        function updateEducation(id, field, value) {
+            const edu = data.education.find(e => e.id === id);
+            if (edu) {
+                edu[field] = value;
+                updatePreview();
+            }
+        }
+
+        function renderEducation() {
+            const container = document.getElementById('educationContainer');
+            if (data.education.length === 0) {
+                container.innerHTML = '<div class="entry-item empty">No education entries yet</div>';
+                return;
+            }
+
+            container.innerHTML = data.education.map(edu => `
+                <div class="entry-item">
+                    <div class="form-group">
+                        <label>School/University *</label>
+                        <input type="text" value="${edu.school}" placeholder="University Name" onchange="updateEducation(${edu.id}, 'school', this.value)">
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Degree *</label>
+                            <input type="text" value="${edu.degree}" placeholder="Bachelor" onchange="updateEducation(${edu.id}, 'degree', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Field of Study</label>
+                            <input type="text" value="${edu.field}" placeholder="Computer Science" onchange="updateEducation(${edu.id}, 'field', this.value)">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="text" value="${edu.startDate}" placeholder="2018" onchange="updateEducation(${edu.id}, 'startDate', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="text" value="${edu.endDate}" placeholder="2022" onchange="updateEducation(${edu.id}, 'endDate', this.value)">
+                        </div>
+                    </div>
+                    <button class="btn btn-danger" onclick="removeEducation(${edu.id})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Work Experience Management
+        function addExperience() {
+            const id = Date.now();
+            data.experience.push({
+                id,
+                company: '',
+                position: '',
+                startDate: '',
+                endDate: '',
+                description: ''
+            });
+            renderExperience();
+            updatePreview();
+        }
+
+        function removeExperience(id) {
+            data.experience = data.experience.filter(e => e.id !== id);
+            renderExperience();
+            updatePreview();
+        }
+
+        function updateExperience(id, field, value) {
+            const exp = data.experience.find(e => e.id === id);
+            if (exp) {
+                exp[field] = value;
+                updatePreview();
+            }
+        }
+
+        function renderExperience() {
+            const container = document.getElementById('experienceContainer');
+            if (data.experience.length === 0) {
+                container.innerHTML = '<div class="entry-item empty">No experience entries yet</div>';
+                return;
+            }
+
+            container.innerHTML = data.experience.map(exp => `
+                <div class="entry-item">
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Company *</label>
+                            <input type="text" value="${exp.company}" placeholder="Company Name" onchange="updateExperience(${exp.id}, 'company', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>Job Title *</label>
+                            <input type="text" value="${exp.position}" placeholder="Job Title" onchange="updateExperience(${exp.id}, 'position', this.value)">
+                        </div>
+                    </div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div class="form-group">
+                            <label>Start Date</label>
+                            <input type="text" value="${exp.startDate}" placeholder="Jan 2020" onchange="updateExperience(${exp.id}, 'startDate', this.value)">
+                        </div>
+                        <div class="form-group">
+                            <label>End Date</label>
+                            <input type="text" value="${exp.endDate}" placeholder="Present" onchange="updateExperience(${exp.id}, 'endDate', this.value)">
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Description</label>
+                        <textarea placeholder="Describe your responsibilities and achievements..." onchange="updateExperience(${exp.id}, 'description', this.value)">${exp.description}</textarea>
+                    </div>
+                    <button class="btn btn-danger" onclick="removeExperience(${exp.id})">Remove</button>
+                </div>
+            `).join('');
+        }
+
+        // Form Population
+        function populateForm() {
+            document.getElementById('fullName').value = data.personal.fullName;
+            document.getElementById('email').value = data.personal.email;
+            document.getElementById('phone').value = data.personal.phone;
+            document.getElementById('location').value = data.personal.location;
+            document.getElementById('summary').value = data.personal.summary;
+            document.getElementById('skills').value = data.skills.join(', ');
+            renderEducation();
+            renderExperience();
+        }
+
+        // Preview Update
+        function updatePreview() {
+            updatePersonalInfo();
+
+            // Personal Info
+            document.getElementById('previewName').textContent = data.personal.fullName || 'Your Name';
+            document.getElementById('previewEmail').textContent = data.personal.email || 'email@example.com';
+            
+            const phoneSpan = document.getElementById('previewPhone');
+            if (data.personal.phone) {
+                phoneSpan.textContent = data.personal.phone;
+                phoneSpan.style.display = 'inline';
+            } else {
+                phoneSpan.style.display = 'none';
+            }
+
+            const locationSpan = document.getElementById('previewLocation');
+            if (data.personal.location) {
+                locationSpan.textContent = data.personal.location;
+                locationSpan.style.display = 'inline';
+            } else {
+                locationSpan.style.display = 'none';
+            }
+
+            // Summary
+            const summarySection = document.getElementById('summarySection');
+            if (data.personal.summary) {
+                document.getElementById('previewSummary').textContent = data.personal.summary;
+                summarySection.style.display = 'block';
+            } else {
+                summarySection.style.display = 'none';
+            }
+
+            // Experience
+            const expSection = document.getElementById('experienceSection');
+            if (data.experience.length > 0) {
+                document.getElementById('previewExperience').innerHTML = data.experience.map(exp => `
+                    <div class="preview-entry">
+                        <div class="preview-entry-title">${exp.position}</div>
+                        <div class="preview-entry-subtitle">${exp.company}</div>
+                        <div class="preview-entry-date">${exp.startDate}${exp.endDate ? ' - ' + exp.endDate : ''}</div>
+                        ${exp.description ? `<div class="preview-entry-description">${exp.description}</div>` : ''}
+                    </div>
+                `).join('');
+                expSection.style.display = 'block';
+            } else {
+                expSection.style.display = 'none';
+            }
+
+            // Education
+            const eduSection = document.getElementById('educationSection');
+            if (data.education.length > 0) {
+                document.getElementById('previewEducation').innerHTML = data.education.map(edu => `
+                    <div class="preview-entry">
+                        <div class="preview-entry-title">${edu.school}</div>
+                        <div class="preview-entry-subtitle">${edu.degree}${edu.field ? ' in ' + edu.field : ''}</div>
+                        <div class="preview-entry-date">${edu.startDate}${edu.endDate ? ' - ' + edu.endDate : ''}</div>
+                    </div>
+                `).join('');
+                eduSection.style.display = 'block';
+            } else {
+                eduSection.style.display = 'none';
+            }
+
+            // Skills
+            const skillsSection = document.getElementById('skillsSection');
+            const skillsInput = document.getElementById('skills').value;
+            if (skillsInput.trim()) {
+                data.skills = skillsInput.split(',').map(s => s.trim()).filter(s => s);
+                document.getElementById('previewSkills').innerHTML = data.skills
+                    .map(skill => `<div class="skill-badge">${skill}</div>`)
+                    .join('');
+                skillsSection.style.display = 'block';
+            } else {
+                skillsSection.style.display = 'none';
+            }
+
+            saveToStorage();
+        }
+
+        // PDF Download
+        function downloadPDF() {
+            if (!data.personal.fullName || !data.personal.email) {
+                alert('Please fill in at least your name and email address.');
+                return;
+            }
+
+            const element = document.getElementById('resumePreview');
+            const filename = (data.personal.fullName.replace(/\s+/g, '_') || 'resume') + '.pdf';
+            
+            const options = {
+                margin: 10,
+                filename: filename,
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2 },
+                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+            };
+
+            html2pdf().set(options).from(element).save();
+        }
+
+        // Reset Form
+        function resetForm() {
+            if (confirm('Are you sure you want to clear all data?')) {
+                data.personal = { fullName: '', email: '', phone: '', location: '', summary: '' };
+                data.education = [];
+                data.experience = [];
+                data.skills = [];
+                localStorage.removeItem('resumeData');
+                location.reload();
+            }
+        }
+
+        // Initialize on load
+        window.addEventListener('load', init);
+    </script>
+</body>
+</html>
