@@ -509,6 +509,19 @@
         .theme-toggle span {
             font-size: 1rem;
         }
+
+          /* ─── FOOTER ─── */
+        footer {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            padding: 2.5rem;
+            border-top: 1px solid var(--card-border);
+            color: var(--text-dim);
+            font-size: 0.82rem;
+        }
+
+        footer span { color: var(--accent2); }
     </style>
 </head>
 <body>
@@ -1032,5 +1045,9 @@
         // Initialize on load
         window.addEventListener('load', init);
     </script>
+    <!-- Footer -->
+    <footer>
+    <p>Designed & built for <span>Vernielyn Germono</span> · 2026</p>
+    </footer>
 </body>
 </html>
