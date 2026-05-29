@@ -543,19 +543,19 @@
                     <div class="section-title">Personal Information</div>
                     <div class="form-group">
                         <label>Full Name *</label>
-                        <input type="text" id="fullName" placeholder="John Doe" onchange="updatePreview()">
+                        <input type="text" id="fullName" placeholder="First Name, Middle Name, Last Name" onchange="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>Email Address *</label>
-                        <input type="email" id="email" placeholder="john@example.com" onchange="updatePreview()">
+                        <input type="email" id="email" placeholder="sample@example.com" onchange="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>Phone Number</label>
-                        <input type="tel" id="phone" placeholder="+1 (555) 123-4567" onchange="updatePreview()">
+                        <input type="tel" id="phone" placeholder="(+63) 9xxxxxxxxx" onchange="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>Location</label>
-                        <input type="text" id="location" placeholder="New York, NY" onchange="updatePreview()">
+                        <input type="text" id="location" placeholder="City/Province" onchange="updatePreview()">
                     </div>
                     <div class="form-group">
                         <label>Professional Summary</label>
@@ -947,25 +947,75 @@
         }
 
         // PDF Download
-        function downloadPDF() {
-            if (!data.personal.fullName || !data.personal.email) {
-                alert('Please fill in at least your name and email address.');
-                return;
-            }
+        // function downloadPDF() {
+        //     if (!data.personal.fullName || !data.personal.email) {
+        //         alert('Please fill in at least your name and email address.');
+        //         return;
+        //     }
 
-            const element = document.getElementById('resumePreview');
-            const filename = (data.personal.fullName.replace(/\s+/g, '_') || 'resume') + '.pdf';
+        //     const element = document.getElementById('resumePreview');
+        //     const filename = (data.personal.fullName.replace(/\s+/g, '_') || 'resume') + '.pdf';
             
-            const options = {
-                margin: 10,
-                filename: filename,
-                image: { type: 'jpeg', quality: 0.98 },
-                html2canvas: { scale: 2 },
-                jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
-            };
+        //     const options = {
+        //         margin: 10,
+        //         filename: filename,
+        //         image: { type: 'jpeg', quality: 0.98 },
+        //         html2canvas: { scale: 2 },
+        //         jsPDF: { orientation: 'portrait', unit: 'mm', format: 'a4' }
+        //     };
 
-            html2pdf().set(options).from(element).save();
+        //     html2pdf().set(options).from(element).save();
+        // }
+        function downloadPDF() {
+        if (!data.personal.fullName || !data.personal.email) {
+            alert('Please fill in at least your name and email address.');
+            return;
         }
+
+        const element = document.getElementById('resumePreview');
+        const filename = (data.personal.fullName.replace(/\s+/g, '_') || 'resume') + '.pdf';
+
+        const clone = element.cloneNode(true);
+
+        clone.style.width = '190mm';
+        clone.style.minHeight = '0';
+        clone.style.padding = '0';
+        clone.style.margin = '0';
+        clone.style.background = '#ffffff';
+        clone.style.color = '#1a202c';
+
+        const wrapper = document.createElement('div');
+        wrapper.style.position = 'fixed';
+        wrapper.style.top = '0';
+        wrapper.style.left = '0';
+        wrapper.style.width = '210mm';
+        wrapper.style.padding = '10mm';
+        wrapper.style.background = '#ffffff';
+        wrapper.style.zIndex = '-9999';
+
+        wrapper.appendChild(clone);
+        document.body.appendChild(wrapper);
+
+        const options = {
+            margin: [5, 5, 5, 5],
+            filename: filename,
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: {
+                scale: 2,
+                scrollY: 0,
+                useCORS: true
+            },
+            jsPDF: {
+                orientation: 'portrait',
+                unit: 'mm',
+                format: 'a4'
+            }
+        };
+
+        html2pdf().set(options).from(clone).save().then(() => {
+            document.body.removeChild(wrapper);
+        });
+    }
 
         // Reset Form
         function resetForm() {
